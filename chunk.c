@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include <stdio.h>
+
 #include "chunk.h"
 #include "memory.h"
 
@@ -18,6 +20,9 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
         chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
     }
+
+    //OpCode* opcode;
+    //printf("%s\n", opcode[byte]);
 
     chunk->code[chunk->count] = byte;
     chunk->lines[chunk->count] = line;
