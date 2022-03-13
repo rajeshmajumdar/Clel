@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "vm.h"
 #include "debug.h"
@@ -13,17 +14,8 @@ VM vm;
 static void resetStack();
 static InterpretResult run();
 
-void initVM() {
-    resetStack();
-    vm.objects = NULL;
-    initTable(&vm.strings);
-    initTable(&vm.globals);
-}
-
-void freeVM() {
-    freeTable(&vm.globals);
-    freeTable(&vm.strings);
-    freeObjects();
+static Value clockNative(int argCount, Value* args) {
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
 static void resetStack() {
@@ -68,6 +60,14 @@ static Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
+static void defineNative(const char* name, NativeFn function) {
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    pop();
+    pop();
+}
+
 static bool call(ObjFunction* function, int argCount) {
     if (argCount != function->arity) {
         runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
@@ -92,6 +92,13 @@ static bool callValue(Value callee, int argCount) {
         switch(OBJ_TYPE(callee)) {
             case OBJ_FUNCTION:
                 return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);
+                return true;
+            }
             default:
                 break;
         }
@@ -126,6 +133,21 @@ InterpretResult interpret(const char* source) {
     callValue(OBJ_VAL(function), 0);
 
     return run();
+}
+
+void initVM() {
+    resetStack();
+    vm.objects = NULL;
+    initTable(&vm.strings);
+    initTable(&vm.globals);
+
+    defineNative("clock", clockNative);
+}
+
+void freeVM() {
+    freeTable(&vm.globals);
+    freeTable(&vm.strings);
+    freeObjects();
 }
 
 static InterpretResult run() {
