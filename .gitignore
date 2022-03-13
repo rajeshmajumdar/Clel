@@ -1,0 +1,7 @@
+.vscode/*
+.DS_Store
+.vscode/
+examples/
+examples/*
+build/
+build/*
