@@ -64,7 +64,7 @@ static void adjustCapacity(Table* table, int capacity) {
 }
 
 bool tableGet(Table* table, ObjString* key, Value* value) {
-    if (table->count == 0) return false;
+    //if (table->count == 0) return false;
 
     Entry* entry = findEntry(table->enteries, table->capacity, key);
     if (entry->key == NULL) return false;
@@ -81,7 +81,7 @@ bool tableSet(Table* table, ObjString* key, Value value) {
     }
 
     Entry* entry = findEntry(table->enteries, table->capacity, key);
-    bool isNewKey = entry->key = NULL;
+    bool isNewKey = entry->key == NULL;
     if (isNewKey && IS_NIL(entry->value)) table->count++;
 
     entry->key = key;
