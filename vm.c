@@ -18,6 +18,19 @@ static Value clockNative(int argCount, Value* args) {
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
+static Value inputNative(int argCount, Value* args) {
+    char buffer[256];
+    if (argCount == 0) {
+        fgets(buffer, sizeof(buffer), stdin);
+    } else if (argCount == 1) {
+        printf("%s", AS_CSTRING(args[0]));
+        fgets(buffer, sizeof(buffer), stdin);
+    } else {
+        fprintf(stderr, "input: wrong number of arguments.\n");
+    }
+    return OBJ_VAL(copyString(buffer, strlen(buffer) - 1));
+}
+
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
@@ -142,6 +155,7 @@ void initVM() {
     initTable(&vm.globals);
 
     defineNative("clock", clockNative);
+    defineNative("input", inputNative);
 }
 
 void freeVM() {
